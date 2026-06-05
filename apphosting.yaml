@@ -1,0 +1,59 @@
+# Firebase App Hosting 구성 (집진설비)
+# NEXT_PUBLIC_FIREBASE_* 는 브라우저 노출 공개 클라이언트 설정(비밀 아님).
+# 서버 비밀키는 추후 Cloud Secret Manager(secret:)로 별도 처리.
+
+runConfig:
+  minInstances: 0
+  maxInstances: 2
+  concurrency: 80
+
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: AIzaSyAoPU8Elo5BzGPogtVZNsjzqQlNzC04by4
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
+    value: reportforge-dc94b.firebaseapp.com
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_PROJECT_ID
+    value: reportforge-dc94b
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET
+    value: reportforge-dc94b.firebasestorage.app
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+    value: "734072034656"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_FIREBASE_APP_ID
+    value: "1:734072034656:web:263b4be6919c85109bfa05"
+    availability:
+      - BUILD
+      - RUNTIME
+  - variable: NEXT_PUBLIC_APP_URL
+    value: https://dust.mechamindlab.com
+    availability:
+      - BUILD
+      - RUNTIME
+
+  # ── 비공개 게이트 (구축 중) ──
+  - variable: SITE_GATE_ENABLED
+    value: "true"
+    availability:
+      - RUNTIME
+  - variable: SITE_GATE_USER
+    value: mecha
+    availability:
+      - RUNTIME
+  - variable: SITE_GATE_PASS
+    value: mechamind2026!
+    availability:
+      - RUNTIME
