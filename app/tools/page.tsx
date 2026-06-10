@@ -10,6 +10,7 @@ const TOOLS = [
   { code: "hood", title: "후드 정압손실", desc: "(1+K)·ρ·V²/2", icon: "🌪️" },
   { code: "pressure-loss", title: "덕트 정압손실", desc: "Darcy + 손실계수", icon: "📐" },
   { code: "dewpoint", title: "노점 계산기", desc: "Verhoff-Banchero 황산", icon: "💧" },
+  { code: "lottery", title: "로또 6/45 추출기", desc: "통계 분석 + 구조 제약 추출", icon: "🎰" },
 ];
 
 export default function ToolsHome() {

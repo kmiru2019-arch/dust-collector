@@ -2,6 +2,23 @@
 
 본 프로젝트의 모든 변경사항을 기록합니다. [Keep a Changelog](https://keepachangelog.com/) 형식.
 
+## [Unreleased] — 로또 6/45 추출기
+
+### Added — 단일 도구 5번째: 로또 번호 추출기
+- lib/lottery/ — 통계 분석 + 확률 + 생성 엔진 (순수 함수)
+  - probability.ts — 조합론 정확값 (등수별 경우의 수, 1게임 당첨확률 2.383%, N게임 누적확률, 목표확률 도달 게임수, 고정등수 기대값)
+  - stats.ts — 빈도/미출현(gap)/홀짝/저고/합계 분위수/연속수/구간분포 분석, AC value
+  - generate.ts — mulberry32 시드 PRNG 가중 샘플링 + 구조 제약 + 게임 간 중복 방지 + 고정/제외수
+  - popularity.ts — 인기조합(생일군집·등차·연속·구간몰림·끝수쏠림) 회피 → 당첨 시 분배 최소화
+  - fetch.ts — 동행복권 공식 API 라이브 조회 (이진탐색 최신회차 + 배치), CORS 차단 시 graceful fallback
+  - sample-draws.ts — 오프라인 데모/테스트용 합성 데이터 (실데이터 아님 명시)
+- app/tools/lottery — UI: 확률 정직 면책 + 5게임 추출 + 전략 4종 + 통계 시각화
+- app/tools 인덱스에 로또 추출기 카드 추가
+
+### Verified
+- vitest 209 PASS (신규 32: probability 9 + stats 9 + generate 14), next build 성공
+- 정직성 원칙: "당첨 확률 향상 불가능" 명시, 5게임≈11.3%·25%엔 ~12게임 필요를 UI/테스트에 반영
+
 ## [1.3.0-pptx] — 2026-05-30
 
 ### Added — v1.6 PowerPoint (.pptx)
