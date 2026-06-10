@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { InstallButton } from "./_pwa";
+import { InstallButton, FullscreenButton, IosInstallHint, useOnline } from "./_pwa";
 import {
   analyzeDraws,
   generateLines,
@@ -69,6 +69,8 @@ export default function LotteryApp() {
   const [saved, setSaved] = useState<SavedSet[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const online = useOnline();
+  const didAutoDraw = useRef(false);
 
   /* 라이브 데이터 시도 */
   useEffect(() => {
@@ -115,6 +117,9 @@ export default function LotteryApp() {
 
   const draw = useCallback(() => {
     setDrawing(true);
+    try {
+      navigator.vibrate?.([12, 40, 12]);
+    } catch {}
     const seed = Math.floor(Math.random() * 1e9);
     const { lines } = generateLines(draws, {
       lines: Math.min(20, Math.max(1, linesCount)),
@@ -131,6 +136,16 @@ export default function LotteryApp() {
     const total = (lines[0]?.numbers.length ?? 6) * 80 + 500;
     setTimeout(() => setDrawing(false), Math.min(total, 1200));
   }, [draws, linesCount, strategy, avoidPopular, enforceStructure, includeStr, excludeStr]);
+
+  /* PWA 단축어(?action=draw)로 진입 시 자동 1회 추첨 */
+  useEffect(() => {
+    if (didAutoDraw.current) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("action") === "draw") {
+      didAutoDraw.current = true;
+      draw();
+    }
+  }, [draw]);
 
   const linesToText = (lines: { numbers: number[] }[]) =>
     lines.map((l, i) => `${String.fromCharCode(65 + i)}. ${l.numbers.join(", ")}`).join("\n");
@@ -164,7 +179,7 @@ export default function LotteryApp() {
   const mostOddEven = Object.entries(stats.oddEven).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "-";
 
   return (
-    <main className="relative mx-auto min-h-screen max-w-md px-4 pb-28 pt-6 lotto-glow">
+    <main className="relative mx-auto min-h-[100dvh] max-w-md px-4 pb-28 lotto-glow pt-[max(1.25rem,env(safe-area-inset-top))]">
       {/* 헤더 */}
       <header className="mb-5 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -177,6 +192,11 @@ export default function LotteryApp() {
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {!online && (
+            <span className="rounded-full bg-rose-500/15 px-2.5 py-1 text-[10px] font-semibold text-rose-300">
+              오프라인
+            </span>
+          )}
           <span
             className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
               source === "live"
@@ -189,6 +209,7 @@ export default function LotteryApp() {
             {source === "loading" ? "데이터…" : source === "live" ? `LIVE ~${stats.latestRound}회` : "샘플데이터"}
           </span>
           <InstallButton />
+          <FullscreenButton />
         </div>
       </header>
 
@@ -390,8 +411,8 @@ export default function LotteryApp() {
         {source === "sample" && " (현재 오프라인 합성 데이터로 동작 중)"}
       </p>
 
-      {/* 추첨 버튼 (고정) */}
-      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md p-4">
+      {/* 추첨 버튼 (고정, 노치 대응) */}
+      <div className="fixed inset-x-0 bottom-0 z-20 mx-auto max-w-md bg-gradient-to-t from-[#0b1020] via-[#0b1020]/90 to-transparent px-4 pt-6 pb-[max(1rem,env(safe-area-inset-bottom))]">
         <button
           onClick={draw}
           disabled={drawing}
@@ -402,6 +423,8 @@ export default function LotteryApp() {
           {drawing ? "뽑는 중…" : result ? "🎲 다시 뽑기" : "🎲 행운 번호 뽑기"}
         </button>
       </div>
+
+      <IosInstallHint />
 
       {/* 토스트 */}
       {toast && (

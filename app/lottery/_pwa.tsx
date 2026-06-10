@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-/** 서비스워커 등록 (오프라인 지원) */
+/* ── 서비스워커 등록 ─────────────────────────── */
 export function RegisterServiceWorker() {
   useEffect(() => {
     if (typeof window === "undefined" || !("serviceWorker" in navigator)) return;
@@ -16,12 +16,42 @@ export function RegisterServiceWorker() {
   return null;
 }
 
+/* ── 설치 상태/디스플레이 유틸 ───────────────── */
+export function useStandalone(): boolean {
+  const [standalone, setStandalone] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      window.matchMedia?.("(display-mode: standalone)").matches ||
+      window.matchMedia?.("(display-mode: fullscreen)").matches ||
+      // iOS Safari
+      (window.navigator as Navigator & { standalone?: boolean }).standalone === true;
+    setStandalone(!!check());
+  }, []);
+  return standalone;
+}
+
+export function useOnline(): boolean {
+  const [online, setOnline] = useState(true);
+  useEffect(() => {
+    const up = () => setOnline(true);
+    const down = () => setOnline(false);
+    setOnline(navigator.onLine);
+    window.addEventListener("online", up);
+    window.addEventListener("offline", down);
+    return () => {
+      window.removeEventListener("online", up);
+      window.removeEventListener("offline", down);
+    };
+  }, []);
+  return online;
+}
+
 interface BIPEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 }
 
-/** 홈화면 설치 버튼 — beforeinstallprompt 지원 브라우저에서만 노출 */
+/* ── 홈화면 설치 버튼 (Android/Chrome) ────────── */
 export function InstallButton() {
   const [deferred, setDeferred] = useState<BIPEvent | null>(null);
   const [installed, setInstalled] = useState(false);
@@ -37,7 +67,6 @@ export function InstallButton() {
     };
     window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
-    // 이미 스탠드얼론으로 실행 중이면 설치됨으로 간주
     if (window.matchMedia?.("(display-mode: standalone)").matches) setInstalled(true);
     return () => {
       window.removeEventListener("beforeinstallprompt", onBIP);
@@ -46,7 +75,6 @@ export function InstallButton() {
   }, []);
 
   if (installed || !deferred) return null;
-
   return (
     <button
       onClick={async () => {
@@ -58,5 +86,69 @@ export function InstallButton() {
     >
       ⬇ 앱 설치
     </button>
+  );
+}
+
+/* ── 전체화면 토글 (Fullscreen API) ──────────── */
+export function FullscreenButton() {
+  const [fs, setFs] = useState(false);
+  const [supported, setSupported] = useState(false);
+  useEffect(() => {
+    setSupported(typeof document !== "undefined" && !!document.documentElement.requestFullscreen);
+    const onChange = () => setFs(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", onChange);
+    return () => document.removeEventListener("fullscreenchange", onChange);
+  }, []);
+  const toggle = useCallback(() => {
+    if (document.fullscreenElement) document.exitFullscreen?.();
+    else document.documentElement.requestFullscreen?.().catch(() => {});
+  }, []);
+  if (!supported) return null;
+  return (
+    <button
+      onClick={toggle}
+      aria-label="전체화면"
+      className="grid h-8 w-8 place-items-center rounded-full border border-white/10 bg-white/5 text-sm text-slate-300 transition hover:bg-white/10"
+    >
+      {fs ? "🗗" : "⛶"}
+    </button>
+  );
+}
+
+/* ── iOS 홈화면 추가 안내 (beforeinstallprompt 미지원) ── */
+export function IosInstallHint() {
+  const standalone = useStandalone();
+  const [show, setShow] = useState(false);
+  useEffect(() => {
+    const ua = navigator.userAgent;
+    const isIos = /iphone|ipad|ipod/i.test(ua);
+    const isSafari = /safari/i.test(ua) && !/crios|fxios|edgios/i.test(ua);
+    const dismissed = localStorage.getItem("lotto:ios-hint") === "1";
+    if (isIos && isSafari && !standalone && !dismissed) {
+      const t = setTimeout(() => setShow(true), 1200);
+      return () => clearTimeout(t);
+    }
+  }, [standalone]);
+  if (!show) return null;
+  return (
+    <div className="fixed inset-x-3 bottom-24 z-40 rounded-2xl border border-white/15 bg-slate-900/95 p-3 text-[13px] text-slate-200 shadow-2xl backdrop-blur">
+      <div className="flex items-start gap-2">
+        <span className="text-lg">📲</span>
+        <p className="flex-1 leading-relaxed">
+          홈 화면에 앱으로 추가하기: 하단 <b>공유</b> 버튼{" "}
+          <span className="inline-block">⬆️</span> → <b>“홈 화면에 추가”</b>
+        </p>
+        <button
+          onClick={() => {
+            localStorage.setItem("lotto:ios-hint", "1");
+            setShow(false);
+          }}
+          className="shrink-0 text-slate-500 hover:text-slate-200"
+          aria-label="닫기"
+        >
+          ✕
+        </button>
+      </div>
+    </div>
   );
 }

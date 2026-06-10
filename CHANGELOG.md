@@ -2,6 +2,21 @@
 
 본 프로젝트의 모든 변경사항을 기록합니다. [Keep a Changelog](https://keepachangelog.com/) 형식.
 
+## [Unreleased] — 행운로또 PWA 완성도 강화
+
+### Added — 풀 PWA·네이티브 앱 경험
+- scripts/gen-icons.mjs — 의존성 없는 PNG 인코더(zlib)로 실제 아이콘 생성
+  - icon-192/512.png, icon-maskable-512.png, apple-touch-icon.png(180, iOS 대응)
+- manifest 보강: id, display_override(fullscreen→standalone), shortcuts(바로 5게임 뽑기), PNG 아이콘
+- sw.js v2 — 아이콘/매니페스트 프리캐시
+- layout 메타: apple-touch-icon PNG, mobile-web-app-capable, color-scheme dark, OpenGraph
+- 노치 대응 safe-area-inset 여백, 100dvh, overscroll/탭하이라이트 제거
+- 전체화면 토글(Fullscreen API), iOS 홈화면 추가 안내, 오프라인 인디케이터
+- 추첨 시 햅틱 진동(navigator.vibrate), 단축어 진입(?action=draw) 자동 추첨
+
+### Verified
+- next build 성공, 실서버 자산 200(png/manifest/sw)·head 메타 확인, vitest 37 PASS
+
 ## [Unreleased] — 행운로또 PWA 앱
 
 ### Added — 설치형 PWA 앱 (/lottery)

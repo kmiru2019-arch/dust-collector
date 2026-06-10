@@ -1,10 +1,18 @@
 // 행운로또 PWA 서비스워커 — 앱 셸 오프라인 캐시 (network-first)
-const CACHE = "lotto-v1";
+const CACHE = "lotto-v2";
 const FALLBACK = "/lottery";
+const PRECACHE = [
+  "/lottery",
+  "/manifest.webmanifest",
+  "/icon-192.png",
+  "/icon-512.png",
+  "/icon-maskable-512.png",
+  "/apple-touch-icon.png",
+];
 
 self.addEventListener("install", (e) => {
   self.skipWaiting();
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll([FALLBACK]).catch(() => {})));
+  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(PRECACHE).catch(() => {})));
 });
 
 self.addEventListener("activate", (e) => {
