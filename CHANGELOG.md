@@ -2,6 +2,19 @@
 
 본 프로젝트의 모든 변경사항을 기록합니다. [Keep a Changelog](https://keepachangelog.com/) 형식.
 
+## [Unreleased] — 행운로또 PWA 앱
+
+### Added — 설치형 PWA 앱 (/lottery)
+- app/lottery — 풀스크린 다크 모바일 UI: 볼 팝 애니메이션, 전략 칩, 정직한 확률 KPI
+  - 번호 저장(localStorage)·복사·Web Share, 설치 버튼(beforeinstallprompt), 통계 아코디언
+- public/manifest.webmanifest + sw.js(network-first 오프라인 셸) + SVG 아이콘(일반/maskable)
+- app/lottery/_pwa.tsx — 서비스워커 등록 + 홈화면 설치 버튼
+- middleware matcher에 PWA 자산(manifest/sw/icon) 예외 추가
+- app/tools 카드가 새 앱(/lottery)으로 연결, 기존 /tools/lottery 페이지 제거(중복 정리)
+
+### Verified
+- next build 성공(/lottery 정적 생성), 실서버 응답 확인(manifest/sw/icon 200), vitest 37 PASS 유지
+
 ## [Unreleased] — 로또 6/45 추출기
 
 ### Added — 단일 도구 5번째: 로또 번호 추출기

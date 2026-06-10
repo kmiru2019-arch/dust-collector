@@ -10,7 +10,7 @@ const TOOLS = [
   { code: "hood", title: "후드 정압손실", desc: "(1+K)·ρ·V²/2", icon: "🌪️" },
   { code: "pressure-loss", title: "덕트 정압손실", desc: "Darcy + 손실계수", icon: "📐" },
   { code: "dewpoint", title: "노점 계산기", desc: "Verhoff-Banchero 황산", icon: "💧" },
-  { code: "lottery", title: "로또 6/45 추출기", desc: "통계 분석 + 구조 제약 추출", icon: "🎰" },
+  { code: "lottery", title: "행운로또 6/45", desc: "통계 추출 PWA 앱", icon: "🎰", href: "/lottery" },
 ];
 
 export default function ToolsHome() {
@@ -23,7 +23,7 @@ export default function ToolsHome() {
           {TOOLS.map((t) => (
             <Link
               key={t.code}
-              href={`/tools/${t.code}`}
+              href={(t as { href?: string }).href ?? `/tools/${t.code}`}
               className="block p-6 bg-white border-2 border-gray-200 rounded-lg hover:border-brand-400 hover:shadow-md transition"
             >
               <div className="text-4xl mb-2">{t.icon}</div>

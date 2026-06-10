@@ -1,0 +1,27 @@
+{
+  "name": "행운로또 6/45 — 통계 번호 추출기",
+  "short_name": "행운로또",
+  "description": "과거 회차 통계·구조 분석 + 인기조합 회피 기반 로또 6/45 번호 추출 앱",
+  "start_url": "/lottery",
+  "scope": "/lottery",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "lang": "ko-KR",
+  "categories": ["entertainment", "utilities"],
+  "icons": [
+    {
+      "src": "/lottery-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/lottery-icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}
