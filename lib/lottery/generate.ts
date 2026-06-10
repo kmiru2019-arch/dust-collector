@@ -90,10 +90,20 @@ function generateOneLine(
   }
 ): number[] {
   const { include, exclude, sumLo, sumHi, enforceStructure, avoidPopular } = opts;
-  const MAX_ATTEMPTS = 4000;
+  const base = include.filter((n) => !exclude.has(n)); // exclude가 include보다 우선
+  const available = LOTTO_MAX - exclude.size; // 선택 가능한 번호 개수
+
+  // 고정수만으로 6개가 채워지면 조합이 완전히 결정됨 — 제약을 적용할 자유도가 없으니 즉시 반환
+  if (base.length >= LOTTO_PICK) {
+    return [...new Set(base)].sort((a, b) => a - b).slice(0, LOTTO_PICK);
+  }
+
+  const MAX_ATTEMPTS = 2000;
+  // 구조/인기 제약을 끝까지 만족 못 할 수 있는 입력(여유 풀이 좁음)은 완화 시점을 앞당긴다
+  const relaxAfter = available <= LOTTO_PICK + 6 ? 0 : Math.floor(MAX_ATTEMPTS / 2);
 
   for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-    const chosen = new Set<number>(include.filter((n) => !exclude.has(n)));
+    const chosen = new Set<number>(base);
     // 가중 샘플링으로 6개까지 채운다
     let guard = 0;
     while (chosen.size < LOTTO_PICK && guard++ < 1000) {
@@ -107,17 +117,19 @@ function generateOneLine(
     if (chosen.size < LOTTO_PICK) continue;
 
     const arr = [...chosen].sort((a, b) => a - b);
-    // 제약 완화: 시도 절반을 넘기면 구조 제약을 풀어 무한루프 방지
-    const relax = attempt > MAX_ATTEMPTS / 2;
+    // 제약 완화: 일정 시도를 넘기면 제약을 풀어 무한루프 방지 (만족 불가능 입력 대비)
+    const relax = attempt >= relaxAfter && attempt > 0;
     if (enforceStructure && !relax && !passesStructure(arr, sumLo, sumHi)) continue;
     if (avoidPopular && !relax && isPopularCombo(arr)) continue;
     return arr;
   }
 
-  // 최후 폴백: 제약 없이 단순 무작위 (이론적으로 거의 도달 안 함)
-  const fallback = new Set<number>(include.filter((n) => !exclude.has(n)));
-  while (fallback.size < LOTTO_PICK) {
-    fallback.add(Math.floor(rng() * LOTTO_MAX) + 1);
+  // 최후 폴백: 제약 없이 무작위로 채우되 exclude는 끝까지 지킨다.
+  const fallback = new Set<number>(base);
+  let guard = 0;
+  while (fallback.size < LOTTO_PICK && guard++ < 2000) {
+    const cand = Math.floor(rng() * LOTTO_MAX) + 1;
+    if (!exclude.has(cand)) fallback.add(cand);
   }
   return [...fallback].sort((a, b) => a - b);
 }
@@ -148,10 +160,19 @@ export function generateLines(draws: Draw[], options: GenerateOptions): Generate
     sumHi = Math.round(s.p90);
   }
 
+  // 선택 가능한 번호가 6개 미만이면 유효한 게임을 만들 수 없다 → 빈 결과
+  const available = LOTTO_MAX - excludeSet.size;
+  if (available < LOTTO_PICK) return { lines: [], strategy, seed };
+
+  // 고정수가 6개면 조합이 하나로 결정 → 서로 다른 게임은 1개뿐
+  const effectiveBase = validInclude.filter((n) => !excludeSet.has(n));
+  const maxDistinct = effectiveBase.length >= LOTTO_PICK ? 1 : lines;
+  const target = Math.min(lines, maxDistinct);
+
   const result: GeneratedLine[] = [];
   const seen = new Set<string>();
   let safety = 0;
-  while (result.length < lines && safety++ < lines * 200) {
+  while (result.length < target && safety++ < target * 200) {
     const nums = generateOneLine(weights, rng, {
       include: validInclude,
       exclude: excludeSet,
