@@ -9,6 +9,8 @@ export * from "./types";
 export * from "./probability";
 export * from "./stats";
 export * from "./popularity";
+export * from "./payout";
+export * from "./wheel";
 export * from "./generate";
 export * from "./fetch";
 export { SAMPLE_DRAWS, makeSampleDraws } from "./sample-draws";

@@ -2,6 +2,22 @@
 
 본 프로젝트의 모든 변경사항을 기록합니다. [Keep a Changelog](https://keepachangelog.com/) 형식.
 
+## [Unreleased] — 로또: 실수령 최적화·휠링·정직 손익
+
+### Added — 수학적으로 정당한 3대 기능
+- lib/lottery/payout.ts — 분배 위험 점수(splitRisk)·실수령 안전도·정직한 손익(evaluateTicket)
+  - 등수별 1회↑ 확률, 구매비, 고정등수 기대수익, 기대 손익(항상 마이너스)
+- lib/lottery/wheel.ts — 휠링: combinations/nCk, 전체 휠(fullWheel), 축약 휠(coveringWheel 그리디 커버링)
+  - "고른 번호가 모두 당첨에 들면 N개 이상 보장"을 적은 게임으로 구성
+- generate.ts: optimizePayout 옵션 — 후보 과생성 후 안전도 상위 채택 (당첨 시 실수령액↑)
+- app/lottery UI: 라인별 안전도 배지, 추첨 결과 정직 손익 분석, 휠링 섹션(5등/4등/전체)
+- 신규 테스트 14개(payout 8 + wheel 6) — 커버링 보장 실제 검증 포함
+
+### Verified
+- vitest 51 PASS, next build 성공(/lottery 10.7 kB), 실서버 렌더 확인
+- 원칙 유지: "번호로 당첨확률 불가" 명시, 1등이 가장 어려운 등수임을 UI에 반영
+
+
 ## [Unreleased] — 행운로또 PWA 완성도 강화
 
 ### Added — 풀 PWA·네이티브 앱 경험

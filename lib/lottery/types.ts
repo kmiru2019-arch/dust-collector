@@ -88,6 +88,8 @@ export interface GenerateOptions {
   avoidPopular?: boolean;
   /** 구조 제약 적용 여부 */
   enforceStructure?: boolean;
+  /** 분배 위험 최소화 — 안전도 높은 조합 우선 선택 (실수령 기대값↑) */
+  optimizePayout?: boolean;
 }
 
 /** 생성된 한 게임의 평가 메타 */

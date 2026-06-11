@@ -7,10 +7,15 @@ import {
   generateLines,
   probabilitySummary,
   fetchRecentDraws,
+  evaluateTicket,
+  payoutSafety,
+  fullWheel,
+  coveringWheel,
   SAMPLE_DRAWS,
   type Draw,
   type Strategy,
   type GeneratedLine,
+  type WheelResult,
 } from "@/lib/lottery";
 import { DECADE_LABELS } from "@/lib/lottery/stats";
 
@@ -60,8 +65,14 @@ export default function LotteryApp() {
   const [linesCount, setLinesCount] = useState(5);
   const [avoidPopular, setAvoidPopular] = useState(true);
   const [enforceStructure, setEnforceStructure] = useState(true);
+  const [optimizePayout, setOptimizePayout] = useState(true);
   const [includeStr, setIncludeStr] = useState("");
   const [excludeStr, setExcludeStr] = useState("");
+
+  // 휠링
+  const [wheelPoolStr, setWheelPoolStr] = useState("");
+  const [wheelGuarantee, setWheelGuarantee] = useState<"full" | 3 | 4>(3);
+  const [wheel, setWheel] = useState<WheelResult | null>(null);
 
   const [result, setResult] = useState<GeneratedLine[] | null>(null);
   const [drawId, setDrawId] = useState(0); // 애니메이션 재시작용 키
@@ -101,6 +112,23 @@ export default function LotteryApp() {
 
   const stats = useMemo(() => analyzeDraws(draws), [draws]);
   const prob = useMemo(() => probabilitySummary(linesCount), [linesCount]);
+  const evalResult = useMemo(
+    () => (result && result.length ? evaluateTicket(result.map((l) => l.numbers)) : null),
+    [result]
+  );
+
+  const runWheel = useCallback(() => {
+    const pool = wheelPoolStr
+      .split(/[^0-9]+/)
+      .map((x) => parseInt(x, 10))
+      .filter((n) => n >= 1 && n <= 45);
+    const uniq = [...new Set(pool)];
+    if (uniq.length < 6) {
+      setWheel({ lines: [], poolSize: uniq.length, lineCount: 0, costKRW: 0, guarantee: "번호를 6개 이상 골라주세요.", abbreviated: false });
+      return;
+    }
+    setWheel(wheelGuarantee === "full" ? fullWheel(uniq) : coveringWheel(uniq, wheelGuarantee));
+  }, [wheelPoolStr, wheelGuarantee]);
 
   const flash = useCallback((msg: string) => {
     setToast(msg);
@@ -127,6 +155,7 @@ export default function LotteryApp() {
       seed,
       avoidPopular,
       enforceStructure,
+      optimizePayout,
       include: parseNums(includeStr),
       exclude: parseNums(excludeStr),
     });
@@ -135,7 +164,7 @@ export default function LotteryApp() {
     // 마지막 볼 등장까지의 대략적 시간 후 버튼 잠금 해제
     const total = (lines[0]?.numbers.length ?? 6) * 80 + 500;
     setTimeout(() => setDrawing(false), Math.min(total, 1200));
-  }, [draws, linesCount, strategy, avoidPopular, enforceStructure, includeStr, excludeStr]);
+  }, [draws, linesCount, strategy, avoidPopular, enforceStructure, optimizePayout, includeStr, excludeStr]);
 
   /* PWA 단축어(?action=draw)로 진입 시 자동 1회 추첨 */
   useEffect(() => {
@@ -271,6 +300,7 @@ export default function LotteryApp() {
                   <Ball key={n} n={n} animate delay={i * 120 + j * 70} />
                 ))}
               </div>
+              <SafetyBadge score={payoutSafety(line.numbers)} />
               <button
                 onClick={() => saveLine(line.numbers)}
                 className="shrink-0 rounded-lg px-2 py-1 text-lg text-amber-300/70 transition hover:text-amber-300"
@@ -294,6 +324,30 @@ export default function LotteryApp() {
               🔗 공유
             </button>
           </div>
+
+          {/* 정직한 손익 분석 */}
+          {evalResult && (
+            <div className="mt-2 rounded-2xl border border-white/10 bg-white/5 p-3 text-[12px] text-slate-300">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="font-semibold text-slate-200">📊 이 {evalResult.lines}게임 정직 분석</span>
+                <span className="text-[11px] text-slate-400">실수령 안전도 평균 {evalResult.avgSafety}/100</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <Mini label="1등 확률" value={`${(evalResult.pJackpot * 100).toExponential(2)}%`} />
+                <Mini label="5등 이상 확률" value={`${(evalResult.pAnyPrize * 100).toFixed(2)}%`} />
+                <Mini label="구매 비용" value={`${evalResult.costKRW.toLocaleString()}원`} />
+                <Mini
+                  label="기대 손익"
+                  value={`${evalResult.netExpectedKRW > 0 ? "+" : ""}${Math.round(evalResult.netExpectedKRW).toLocaleString()}원`}
+                  warn
+                />
+              </div>
+              <p className="mt-2 text-[10px] leading-relaxed text-slate-500">
+                ※ 1등이 가장 어려운 등수입니다(5등&gt;4등&gt;3등&gt;2등&gt;1등). 기대 손익은 항상 마이너스 —
+                번호로 바꿀 수 없는 게임의 구조예요.
+              </p>
+            </div>
+          )}
         </section>
       )}
 
@@ -335,7 +389,81 @@ export default function LotteryApp() {
           <div className="space-y-2 pt-1">
             <Toggle label="역대 당첨 구조 제약 (합·홀짝·구간 분산)" checked={enforceStructure} onChange={setEnforceStructure} />
             <Toggle label="인기 조합 회피 (생일·연속·등차)" checked={avoidPopular} onChange={setAvoidPopular} />
+            <Toggle label="분배 위험 최소화 (당첨 시 실수령액↑)" checked={optimizePayout} onChange={setOptimizePayout} />
           </div>
+        </div>
+      </details>
+
+      {/* 휠링 */}
+      <details className="mb-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-200">
+          🎟️ 휠링 — 여러 번호로 묶음 조합
+        </summary>
+        <div className="space-y-3 px-4 pb-4">
+          <p className="text-[11px] leading-relaxed text-slate-400">
+            좋아하는 번호 <b className="text-slate-200">7~14개</b>를 고르면, 그 안에서 게임을 조합해요. 1등 확률은
+            게임 수에 비례해서만 커지지만, <b className="text-slate-200">“고른 번호가 다 맞으면 하위 등수 보장”</b>{" "}
+            구조를 적은 게임으로 만들 수 있어요.
+          </p>
+          <label className="block">
+            <span className="mb-1 block text-xs text-slate-400">번호 풀 (예: 1,7,12,18,23,29,33,40)</span>
+            <input
+              value={wheelPoolStr}
+              onChange={(e) => setWheelPoolStr(e.target.value)}
+              placeholder="6개 이상 입력"
+              className="w-full rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-600 focus:border-amber-400/50"
+            />
+          </label>
+          <div className="flex gap-2">
+            {([3, 4, "full"] as const).map((g) => (
+              <button
+                key={String(g)}
+                onClick={() => setWheelGuarantee(g)}
+                className={`flex-1 rounded-lg px-2 py-2 text-xs font-semibold transition ${
+                  wheelGuarantee === g ? "bg-amber-400 text-amber-950" : "border border-white/10 bg-white/5 text-slate-300"
+                }`}
+              >
+                {g === 3 ? "5등 보장" : g === 4 ? "4등 보장" : "전체 휠"}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={runWheel}
+            className="w-full rounded-xl border border-amber-300/30 bg-amber-400/10 py-2 text-sm font-semibold text-amber-200 transition hover:bg-amber-400/20"
+          >
+            휠 만들기
+          </button>
+          {wheel && (
+            <div className="space-y-2">
+              <div className="rounded-xl border border-white/10 bg-white/5 p-3 text-[12px] text-slate-300">
+                <div className="mb-1 flex items-center justify-between">
+                  <span className="font-semibold text-slate-100">{wheel.lineCount}게임</span>
+                  <span className="text-amber-300">{wheel.costKRW.toLocaleString()}원</span>
+                </div>
+                <p className="text-[11px] leading-relaxed text-slate-400">{wheel.guarantee}</p>
+              </div>
+              {wheel.lineCount > 0 && (
+                <>
+                  <div className="max-h-60 space-y-1.5 overflow-y-auto pr-1">
+                    {wheel.lines.map((l, i) => (
+                      <div key={i} className="flex items-center gap-1.5 rounded-lg bg-white/5 p-1.5">
+                        <span className="w-6 text-center text-[10px] text-slate-500">{i + 1}</span>
+                        {l.map((n) => (
+                          <Ball key={n} n={n} size={26} />
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => copy(wheel.lines.map((l, i) => `${i + 1}. ${l.join(", ")}`).join("\n"))}
+                    className="w-full rounded-xl border border-white/10 bg-white/5 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10"
+                  >
+                    📋 휠 전체 복사
+                  </button>
+                </>
+              )}
+            </div>
+          )}
         </div>
       </details>
 
@@ -471,5 +599,27 @@ function MiniKpi({ label, value }: { label: string; value: string }) {
       <div className="text-[10px] text-slate-400">{label}</div>
       <div className="text-sm font-bold text-slate-100">{value}</div>
     </div>
+  );
+}
+
+function Mini({ label, value, warn }: { label: string; value: string; warn?: boolean }) {
+  return (
+    <div className="rounded-lg bg-white/5 p-2">
+      <div className="text-[10px] text-slate-400">{label}</div>
+      <div className={`text-[13px] font-bold ${warn ? "text-rose-300" : "text-slate-100"}`}>{value}</div>
+    </div>
+  );
+}
+
+function SafetyBadge({ score }: { score: number }) {
+  const tone =
+    score >= 70 ? "bg-emerald-400/15 text-emerald-300" : score >= 45 ? "bg-amber-400/15 text-amber-300" : "bg-rose-400/15 text-rose-300";
+  return (
+    <span
+      className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${tone}`}
+      title="실수령 안전도 — 높을수록 당첨 시 단독 수령 가능성↑"
+    >
+      안전 {score}
+    </span>
   );
 }

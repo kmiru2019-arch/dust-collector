@@ -14,6 +14,7 @@ import {
 } from "./types";
 import { analyzeDraws, lineMeta } from "./stats";
 import { isPopularCombo } from "./popularity";
+import { payoutSafety } from "./payout";
 
 /** 결정론적 PRNG (mulberry32) — 같은 시드는 같은 수열 */
 function mulberry32(seed: number): () => number {
@@ -169,10 +170,14 @@ export function generateLines(draws: Draw[], options: GenerateOptions): Generate
   const maxDistinct = effectiveBase.length >= LOTTO_PICK ? 1 : lines;
   const target = Math.min(lines, maxDistinct);
 
-  const result: GeneratedLine[] = [];
+  // 분배 위험 최소화: 후보를 넉넉히 만든 뒤 안전도 높은 순으로 채택
+  const optimize = options.optimizePayout ?? false;
+  const poolTarget = optimize ? Math.min(target * 8, target + 60) : target;
+
+  const candidates: GeneratedLine[] = [];
   const seen = new Set<string>();
   let safety = 0;
-  while (result.length < target && safety++ < target * 200) {
+  while (candidates.length < poolTarget && safety++ < poolTarget * 200) {
     const nums = generateOneLine(weights, rng, {
       include: validInclude,
       exclude: excludeSet,
@@ -184,8 +189,13 @@ export function generateLines(draws: Draw[], options: GenerateOptions): Generate
     const key = nums.join(",");
     if (seen.has(key)) continue; // 게임 간 중복 방지
     seen.add(key);
-    result.push({ numbers: nums, meta: lineMeta(nums) });
+    candidates.push({ numbers: nums, meta: lineMeta(nums) });
   }
+
+  // optimizePayout이면 분배 안전도 내림차순으로 상위 target개 선택
+  const result = optimize
+    ? candidates.sort((a, b) => payoutSafety(b.numbers) - payoutSafety(a.numbers)).slice(0, target)
+    : candidates.slice(0, target);
 
   return { lines: result, strategy, seed };
 }
