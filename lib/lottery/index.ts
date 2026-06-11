@@ -11,6 +11,8 @@ export * from "./stats";
 export * from "./popularity";
 export * from "./payout";
 export * from "./wheel";
+export * from "./syndicate";
+export * from "./rollover";
 export * from "./generate";
 export * from "./fetch";
 export { SAMPLE_DRAWS, makeSampleDraws } from "./sample-draws";

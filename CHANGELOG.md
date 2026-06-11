@@ -2,6 +2,21 @@
 
 본 프로젝트의 모든 변경사항을 기록합니다. [Keep a Changelog](https://keepachangelog.com/) 형식.
 
+## [Unreleased] — 로또: 검증된 고급 분석 (공동구매·이월)
+
+### Added — 웹조사로 검증된 "진짜 효과" 기법만 적용
+- lib/lottery/syndicate.ts — 신디케이트(공동구매) 분석: 1인당 비용·그룹 1등 확률·단독 대비 배수·당첨 분배액
+  (게임 수에 비례해 1등 확률을 실제로 높이는 유일한 합법 방법)
+- lib/lottery/rollover.ts — 이월 잭팟 EV 분석(Mandel): 전조합 구매비(81.45억)·4·5등 확정회수·순손익·성립여부
+  (한국 로또 잭팟 ~20억에선 negative임을 정직하게 계산)
+- app/lottery: "💡 고급 분석" 섹션 — 공동구매 계산기 + 이월 EV 판정 UI
+- 신규 테스트 9개(advanced.test.ts)
+- 적용 거부: AI 1등 예측·Hot/Cold "확률↑" 주장 (웹조사 결과 기만/무효)
+
+### Verified
+- vitest 60 PASS, next build 성공(/lottery 12.2 kB), 실서버 렌더 확인
+
+
 ## [Unreleased] — 로또: 실수령 최적화·휠링·정직 손익
 
 ### Added — 수학적으로 정당한 3대 기능

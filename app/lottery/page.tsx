@@ -11,6 +11,8 @@ import {
   payoutSafety,
   fullWheel,
   coveringWheel,
+  analyzeSyndicate,
+  analyzeRollover,
   SAMPLE_DRAWS,
   type Draw,
   type Strategy,
@@ -74,6 +76,12 @@ export default function LotteryApp() {
   const [wheelGuarantee, setWheelGuarantee] = useState<"full" | 3 | 4>(3);
   const [wheel, setWheel] = useState<WheelResult | null>(null);
 
+  // 고급 분석 (공동구매·이월)
+  const [synMembers, setSynMembers] = useState(5);
+  const [synGames, setSynGames] = useState(50);
+  const [synJackpotEok, setSynJackpotEok] = useState(20);
+  const [rollJackpotEok, setRollJackpotEok] = useState(20);
+
   const [result, setResult] = useState<GeneratedLine[] | null>(null);
   const [drawId, setDrawId] = useState(0); // 애니메이션 재시작용 키
   const [drawing, setDrawing] = useState(false);
@@ -116,6 +124,11 @@ export default function LotteryApp() {
     () => (result && result.length ? evaluateTicket(result.map((l) => l.numbers)) : null),
     [result]
   );
+  const syndicate = useMemo(
+    () => analyzeSyndicate({ members: synMembers, totalGames: synGames, jackpotKRW: synJackpotEok * 1e8 }),
+    [synMembers, synGames, synJackpotEok]
+  );
+  const rollover = useMemo(() => analyzeRollover(rollJackpotEok * 1e8), [rollJackpotEok]);
 
   const runWheel = useCallback(() => {
     const pool = wheelPoolStr
@@ -205,6 +218,13 @@ export default function LotteryApp() {
   };
 
   const pct = (x: number) => (x * 100).toFixed(2) + "%";
+  const won = (n: number) => {
+    const sign = n < 0 ? "-" : "";
+    const a = Math.abs(n);
+    if (a >= 1e8) return `${sign}${(a / 1e8).toLocaleString("ko-KR", { maximumFractionDigits: 2 })}억원`;
+    if (a >= 1e4) return `${sign}${Math.round(a / 1e4).toLocaleString()}만원`;
+    return `${sign}${Math.round(a).toLocaleString()}원`;
+  };
   const mostOddEven = Object.entries(stats.oddEven).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "-";
 
   return (
@@ -467,6 +487,75 @@ export default function LotteryApp() {
         </div>
       </details>
 
+      {/* 고급 분석 — 공동구매 · 이월 (수학적으로 검증된 방법만) */}
+      <details className="mb-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
+        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-200">
+          💡 고급 분석 — 공동구매·이월 (진짜 효과)
+        </summary>
+        <div className="space-y-5 px-4 pb-4">
+          {/* 신디케이트 */}
+          <div>
+            <div className="mb-1 text-sm font-bold text-amber-300">👥 공동구매(신디케이트) 계산기</div>
+            <p className="mb-2 text-[11px] leading-relaxed text-slate-400">
+              1등 확률을 <b className="text-slate-200">실제로</b> 올리는 유일한 합법적 방법 = 서로 다른 조합을 더
+              많이 사기. 여럿이 모으면 1인당 비용은 낮추고 그룹 확률은 게임 수만큼 커져요(당첨금은 분배).
+            </p>
+            <div className="grid grid-cols-3 gap-2">
+              <NumField label="인원" value={synMembers} min={1} max={100} onChange={setSynMembers} />
+              <NumField label="총 게임" value={synGames} min={1} max={100000} onChange={setSynGames} />
+              <NumField label="예상 1등(억)" value={synJackpotEok} min={1} max={1000} onChange={setSynJackpotEok} />
+            </div>
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Mini label="1인당 비용" value={won(syndicate.costPerMemberKRW)} />
+              <Mini label="그룹 1등 확률" value={`${(syndicate.pJackpot * 100).toExponential(2)}%`} />
+              <Mini label="단독 대비" value={`${Math.round(syndicate.improvementVsSolo).toLocaleString()}배`} />
+              <Mini label="1등 시 1인 몫" value={won(syndicate.jackpotShareKRW ?? 0)} />
+            </div>
+            <p className="mt-1.5 text-[10px] text-slate-500">
+              ※ 확률이 {Math.round(syndicate.improvementVsSolo).toLocaleString()}배라도 여전히{" "}
+              {(syndicate.pJackpot * 100).toExponential(1)}%. 기대값은 마이너스예요.
+            </p>
+          </div>
+
+          <div className="h-px bg-white/10" />
+
+          {/* 이월 EV */}
+          <div>
+            <div className="mb-1 text-sm font-bold text-amber-300">📈 이월 잭팟 분석 (Mandel 방식)</div>
+            <p className="mb-2 text-[11px] leading-relaxed text-slate-400">
+              잭팟이 <b className="text-slate-200">전조합 구매비(81.45억)</b>보다 충분히 크면, 모든 조합을 사서 1등을
+              확정으로 가져가는 게 이득이 될 수 있어요(실제 14회 성공 사례). 지금 잭팟으로 따져봅니다.
+            </p>
+            <NumField label="현재 잭팟(억)" value={rollJackpotEok} min={1} max={2000} onChange={setRollJackpotEok} />
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <Mini label="전조합 구매비" value={won(rollover.costAllKRW)} />
+              <Mini label="잭팟/구매비" value={`${rollover.ratio.toFixed(2)}배`} />
+              <Mini label="4·5등 확정회수" value={won(rollover.guaranteedLowerKRW)} />
+              <Mini
+                label="전조합 구매 손익"
+                value={won(rollover.netIfBuyAllKRW)}
+                warn={rollover.netIfBuyAllKRW < 0}
+              />
+            </div>
+            <div
+              className={`mt-2 rounded-lg p-2 text-[11px] font-semibold ${
+                rollover.verdict === "positive"
+                  ? "bg-emerald-400/15 text-emerald-300"
+                  : rollover.verdict === "marginal"
+                  ? "bg-amber-400/15 text-amber-300"
+                  : "bg-rose-400/15 text-rose-300"
+              }`}
+            >
+              {rollover.verdict === "positive"
+                ? "✅ 이론상 +EV — 전조합 구매가 이득 (단 분배·세금·대량구매 제한 고려)"
+                : rollover.verdict === "marginal"
+                ? "⚠️ 근소한 흑자 — 분배·세금 감안하면 위험"
+                : "❌ 손해 — 한국 로또(잭팟 ~20억)에선 Mandel 방식이 성립하지 않아요"}
+            </div>
+          </div>
+        </div>
+      </details>
+
       {/* 저장된 번호 */}
       {saved.length > 0 && (
         <details className="mb-3 rounded-2xl border border-white/10 bg-white/5 backdrop-blur">
@@ -599,6 +688,24 @@ function MiniKpi({ label, value }: { label: string; value: string }) {
       <div className="text-[10px] text-slate-400">{label}</div>
       <div className="text-sm font-bold text-slate-100">{value}</div>
     </div>
+  );
+}
+
+function NumField({
+  label, value, min, max, onChange,
+}: { label: string; value: number; min: number; max: number; onChange: (v: number) => void }) {
+  return (
+    <label className="block">
+      <span className="mb-1 block text-[10px] text-slate-400">{label}</span>
+      <input
+        type="number"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Math.min(max, Math.max(min, Number(e.target.value) || min)))}
+        className="w-full rounded-lg border border-white/10 bg-white/5 px-2 py-1.5 text-sm text-slate-100 outline-none focus:border-amber-400/50"
+      />
+    </label>
   );
 }
 
