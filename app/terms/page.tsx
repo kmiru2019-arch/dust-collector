@@ -102,7 +102,7 @@ function TermsKo() {
       <ul>
         <li>상호: 메카 마인드 · 대표: 김형민</li>
         <li>사업자등록번호: 455-45-01423</li>
-        <li>사업장: 경기도 고양시 덕양구 충정로 138 (행신동)</li>
+        <li>사업장: 경기도 고양시 덕양구 충경로 138 (행신동)</li>
         <li>이메일: <code>dustcollector@mechamindlab.com</code></li>
       </ul>
       <h2>부칙</h2>
@@ -166,7 +166,7 @@ function TermsEn() {
       <ul>
         <li>Company: Mecha Mind · CEO: Kim Hyeongmin</li>
         <li>Business Reg. No.: 455-45-01423</li>
-        <li>Address: 138 Chungjeong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do, Republic of Korea</li>
+        <li>Address: 138 Chunggyeong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do, Republic of Korea</li>
         <li>Email: <code>dustcollector@mechamindlab.com</code></li>
       </ul>
       <h2>Supplementary Provisions</h2>

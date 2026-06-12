@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ProcessFlow } from "@/components/home/ProcessFlow";
+import { ClipboardList, GitCompareArrows, Settings2, Ruler, BarChart3, ShieldCheck, Wind, Tornado, Droplet } from "lucide-react";
 
 export const metadata = {
   title: "집진설비 자동설계 — KOSHA·대기환경보전법 엔지니어링 컨설팅",
@@ -7,12 +8,12 @@ export const metadata = {
 };
 
 const FEATURES = [
-  { icon: "📋", title: "Data Sheet 컨설팅", desc: "기본 사양만 입력하면 시스템이 핵심값을 확인하고 최적안을 제안합니다." },
-  { icon: "🧭", title: "2~3안 비교 제시", desc: "건식·습식·반건식을 구조도·장단점·TCO로 비교해 한눈에 선택." },
-  { icon: "⚙️", title: "설비별 동적 상세설계", desc: "선택한 구성에 필요한 단계만 (3~8단) 자동 구성해 정밀 사이징." },
-  { icon: "📐", title: "검증된 엔지니어링 식", desc: "KOSHA W-1·Swamee-Jain·Lapple·Deutsch·Verhoff-Banchero 동시계산." },
-  { icon: "📊", title: "P&ID · BOM · 5년 TCO", desc: "계통도·자재명세·총소유비용·슬라이드·PDF 보고서 자동생성." },
-  { icon: "🛡️", title: "법규 컴플라이언스", desc: "대기환경보전법·산안법·KOSHA·폐기물·화관법 12항목 자동 판정." },
+  { Icon: ClipboardList, title: "Data Sheet 컨설팅", desc: "기본 사양만 입력하면 시스템이 핵심값을 확인하고 최적안을 제안합니다." },
+  { Icon: GitCompareArrows, title: "2~3안 비교 제시", desc: "건식·습식·반건식을 구조도·장단점·TCO로 비교해 한눈에 선택." },
+  { Icon: Settings2, title: "설비별 동적 상세설계", desc: "선택한 구성에 필요한 단계만 (3~8단) 자동 구성해 정밀 사이징." },
+  { Icon: Ruler, title: "검증된 엔지니어링 식", desc: "KOSHA W-1·Swamee-Jain·Lapple·Deutsch·Verhoff-Banchero 동시계산." },
+  { Icon: BarChart3, title: "P&ID · BOM · 5년 TCO", desc: "계통도·자재명세·총소유비용·슬라이드·PDF 보고서 자동생성." },
+  { Icon: ShieldCheck, title: "법규 컴플라이언스", desc: "대기환경보전법·산안법·KOSHA·폐기물·화관법 12항목 자동 판정." },
 ];
 
 const STATS = [
@@ -31,10 +32,10 @@ const STEPS = [
 ];
 
 const TOOLS = [
-  { code: "airflow", title: "풍량 계산기", icon: "💨" },
-  { code: "hood", title: "후드 정압", icon: "🌪️" },
-  { code: "pressure-loss", title: "덕트 손실", icon: "📐" },
-  { code: "dewpoint", title: "노점 계산기", icon: "💧" },
+  { code: "airflow", title: "풍량 계산기", Icon: Wind },
+  { code: "hood", title: "후드 정압", Icon: Tornado },
+  { code: "pressure-loss", title: "덕트 손실", Icon: Ruler },
+  { code: "dewpoint", title: "노점 계산기", Icon: Droplet },
 ];
 
 export default function Home() {
@@ -134,7 +135,7 @@ export default function Home() {
           {FEATURES.map((f) => (
             <div key={f.title}
               className="group rounded-2xl border border-gray-200 bg-white p-6 hover:border-brand-400 hover:shadow-xl hover:-translate-y-1 transition-all duration-200">
-              <div className="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center text-2xl mb-4 group-hover:scale-110 transition">{f.icon}</div>
+              <div className="w-12 h-12 rounded-xl bg-brand-50 flex items-center justify-center mb-4 group-hover:scale-110 transition"><f.Icon className="w-6 h-6 text-brand-600" strokeWidth={1.8} aria-hidden="true" /></div>
               <h3 className="font-bold text-lg text-brand-900 mb-1.5">{f.title}</h3>
               <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
             </div>
@@ -186,7 +187,7 @@ export default function Home() {
           {TOOLS.map((t) => (
             <Link key={t.code} href={`/tools/${t.code}`}
               className="group rounded-xl border border-gray-200 bg-white p-6 text-center hover:border-brand-400 hover:shadow-lg transition">
-              <div className="text-3xl mb-2 group-hover:scale-110 transition">{t.icon}</div>
+              <div className="mb-2 flex justify-center group-hover:scale-110 transition"><t.Icon className="w-7 h-7 text-brand-600" strokeWidth={1.8} aria-hidden="true" /></div>
               <div className="font-bold text-brand-900">{t.title}</div>
             </Link>
           ))}
@@ -216,7 +217,7 @@ export default function Home() {
               <Link href="/privacy" className="font-semibold hover:text-brand-700">개인정보처리방침</Link>
             </div>
             <div className="leading-relaxed">
-              상호 메카 마인드 · 대표 김형민 · 사업자등록번호 455-45-01423 · 경기도 고양시 덕양구 충정로 138 (행신동) · 이메일 dustcollector@mechamindlab.com
+              상호 메카 마인드 · 대표 김형민 · 사업자등록번호 455-45-01423 · 경기도 고양시 덕양구 충경로 138 (행신동) · 이메일 dustcollector@mechamindlab.com
             </div>
             <div>© 2026 Dust Collector Designer · 메카 마인드</div>
           </div>

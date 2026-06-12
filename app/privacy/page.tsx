@@ -87,7 +87,7 @@ function PrivacyKo() {
       <h2>제10조 (사업자 정보)</h2>
       <ul>
         <li>상호: 메카 마인드 · 대표: 김형민 · 사업자등록번호: 455-45-01423</li>
-        <li>사업장: 경기도 고양시 덕양구 충정로 138 (행신동)</li>
+        <li>사업장: 경기도 고양시 덕양구 충경로 138 (행신동)</li>
       </ul>
       <h2>부칙</h2>
       <p>본 방침은 2026년 6월 5일부터 시행합니다.</p>
@@ -140,7 +140,7 @@ function PrivacyEn() {
       <h2>10. Business Information</h2>
       <ul>
         <li>Company: Mecha Mind · CEO: Kim Hyeongmin · Business Reg. No.: 455-45-01423</li>
-        <li>Address: 138 Chungjeong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do, Republic of Korea</li>
+        <li>Address: 138 Chunggyeong-ro, Deogyang-gu, Goyang-si, Gyeonggi-do, Republic of Korea</li>
       </ul>
       <h2>Supplementary Provisions</h2>
       <p>This policy is effective from June 5, 2026.</p>
