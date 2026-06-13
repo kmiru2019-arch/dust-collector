@@ -3,10 +3,9 @@ import { LOTTO_HISTORY } from "../history";
 import { analyzeDraws } from "../stats";
 
 describe("로또 전체 실데이터 (history)", () => {
-  it("1~1227회 연속, 누락 없음", () => {
-    expect(LOTTO_HISTORY.length).toBe(1227);
+  it("1회부터 연속, 누락 없음 (주간 자동 업데이트로 증가)", () => {
+    expect(LOTTO_HISTORY.length).toBeGreaterThanOrEqual(1228);
     expect(LOTTO_HISTORY[0].round).toBe(1);
-    expect(LOTTO_HISTORY[LOTTO_HISTORY.length - 1].round).toBe(1227);
     for (let i = 0; i < LOTTO_HISTORY.length; i++) {
       expect(LOTTO_HISTORY[i].round).toBe(i + 1); // 빠짐 없이 연속
     }
@@ -25,10 +24,13 @@ describe("로또 전체 실데이터 (history)", () => {
     }
   });
 
-  it("실제 최신 회차 값 확인 (공식 데이터 대조)", () => {
+  it("실제 회차 값 확인 (공식 데이터 대조)", () => {
     const r1227 = LOTTO_HISTORY.find((d) => d.round === 1227)!;
     expect(r1227.numbers).toEqual([1, 14, 16, 34, 41, 44]);
     expect(r1227.bonus).toBe(13);
+    const r1228 = LOTTO_HISTORY.find((d) => d.round === 1228)!;
+    expect(r1228.numbers).toEqual([24, 29, 30, 31, 35, 44]);
+    expect(r1228.bonus).toBe(1);
   });
 
   it("공정성: 번호 빈도 카이제곱이 임계값(60.5) 미만 → 편향 없음", () => {

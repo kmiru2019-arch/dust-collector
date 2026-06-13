@@ -13,7 +13,7 @@ import {
   coveringWheel,
   analyzeSyndicate,
   analyzeRollover,
-  SAMPLE_DRAWS,
+  LOTTO_HISTORY,
   type Draw,
   type Strategy,
   type GeneratedLine,
@@ -60,8 +60,8 @@ const STRATEGIES: { id: Strategy; label: string; desc: string }[] = [
 ];
 
 export default function LotteryApp() {
-  const [draws, setDraws] = useState<Draw[]>(SAMPLE_DRAWS);
-  const [source, setSource] = useState<"loading" | "live" | "sample">("loading");
+  const [draws, setDraws] = useState<Draw[]>(LOTTO_HISTORY);
+  const [source, setSource] = useState<"loading" | "live" | "offline">("loading");
 
   const [strategy, setStrategy] = useState<Strategy>("balanced");
   const [linesCount, setLinesCount] = useState(5);
@@ -99,7 +99,7 @@ export default function LotteryApp() {
       if (live.length >= 30) {
         setDraws(live);
         setSource("live");
-      } else setSource("sample");
+      } else setSource("offline");
     })();
     return () => ctrl.abort();
   }, []);
@@ -250,12 +250,12 @@ export default function LotteryApp() {
             className={`rounded-full px-2.5 py-1 text-[10px] font-semibold ${
               source === "live"
                 ? "bg-emerald-400/15 text-emerald-300"
-                : source === "sample"
-                ? "bg-amber-400/15 text-amber-300"
+                : source === "offline"
+                ? "bg-sky-400/15 text-sky-300"
                 : "bg-slate-500/15 text-slate-300"
             }`}
           >
-            {source === "loading" ? "데이터…" : source === "live" ? `LIVE ~${stats.latestRound}회` : "샘플데이터"}
+            {source === "loading" ? "데이터…" : source === "live" ? `LIVE ~${stats.latestRound}회` : `내장 ${stats.latestRound}회`}
           </span>
           <InstallButton />
           <FullscreenButton />
@@ -625,7 +625,7 @@ export default function LotteryApp() {
 
       <p className="px-2 text-center text-[10px] leading-relaxed text-slate-600">
         본 앱은 오락·통계 학습용입니다. 당첨을 보장하지 않으며 과도한 구매는 삼가세요. 19세 미만 구매 불가.
-        {source === "sample" && " (현재 오프라인 합성 데이터로 동작 중)"}
+        {source === "offline" && " (실시간 연결 없이 내장 실데이터로 동작 중)"}
       </p>
 
       {/* 추첨 버튼 (고정, 노치 대응) */}
