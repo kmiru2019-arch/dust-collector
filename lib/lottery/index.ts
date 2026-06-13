@@ -16,3 +16,4 @@ export * from "./rollover";
 export * from "./generate";
 export * from "./fetch";
 export { SAMPLE_DRAWS, makeSampleDraws } from "./sample-draws";
+export { LOTTO_HISTORY } from "./history";
