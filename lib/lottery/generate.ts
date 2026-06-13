@@ -170,9 +170,10 @@ export function generateLines(draws: Draw[], options: GenerateOptions): Generate
   const maxDistinct = effectiveBase.length >= LOTTO_PICK ? 1 : lines;
   const target = Math.min(lines, maxDistinct);
 
-  // 분배 위험 최소화: 후보를 넉넉히 만든 뒤 안전도 높은 순으로 채택
+  // 분배 위험 최소화: 후보를 대량 생성한 뒤 안전도 최상위만 채택
+  // (당첨 확률은 불변 — 당첨 시 분배 인원을 줄여 실수령 기대값을 높이는 유일한 레버)
   const optimize = options.optimizePayout ?? false;
-  const poolTarget = optimize ? Math.min(target * 8, target + 60) : target;
+  const poolTarget = optimize ? Math.min(600, Math.max(target * 30, target + 200)) : target;
 
   const candidates: GeneratedLine[] = [];
   const seen = new Set<string>();
